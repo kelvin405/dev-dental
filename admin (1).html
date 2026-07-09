@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dev Health Centre – Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --purple-deep: #3B1F6E;
+    --purple-mid: #6C3FC5;
+    --purple-soft: #9B72E8;
+    --purple-light: #EDE7FB;
+    --purple-pale: #F7F4FE;
+    --white: #FFFFFF;
+    --gray-500: #888;
+    --gray-700: #444;
+    --text-dark: #1A1030;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --radius: 14px;
+    --shadow: 0 4px 32px rgba(59,31,110,0.10);
+    --shadow-lg: 0 12px 48px rgba(59,31,110,0.18);
+    --green: #1E7A3D;
+    --green-bg: #EAF9EF;
+    --red: #B42318;
+    --red-bg: #FDEDED;
+    --amber: #92610A;
+    --amber-bg: #FEF3E2;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); color: var(--text-dark); background: var(--purple-pale); line-height: 1.6; min-height: 100vh; }
+
+  header {
+    background: var(--purple-deep); color: white; padding: 18px 6%;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--purple-mid);
+    display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700;
+  }
+  .brand-text h1 { font-family: var(--font-display); font-size: 1.15rem; }
+  .brand-text p { font-size: 0.78rem; color: var(--purple-soft); }
+  #logoutBtn {
+    background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.25);
+    padding: 8px 18px; border-radius: 100px; font-size: 0.85rem; cursor: pointer; display: none;
+  }
+  #logoutBtn:hover { background: rgba(255,255,255,0.18); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 40px 6% 80px; }
+
+  /* LOGIN */
+  #loginView { display: flex; justify-content: center; padding-top: 60px; }
+  .login-card {
+    background: white; border-radius: 20px; padding: 40px 36px; max-width: 380px; width: 100%;
+    box-shadow: var(--shadow-lg); border: 1px solid var(--purple-light);
+  }
+  .login-card h2 { font-family: var(--font-display); color: var(--purple-deep); font-size: 1.4rem; margin-bottom: 6px; }
+  .login-card p.sub { color: var(--gray-500); font-size: 0.88rem; margin-bottom: 26px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--purple-deep); margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--purple-light);
+    font-family: var(--font-body); font-size: 0.92rem; outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--purple-mid); }
+  #loginBtn {
+    width: 100%; margin-top: 8px; background: var(--purple-mid); color: white; border: none;
+    padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
+  }
+  #loginBtn:hover { background: var(--purple-deep); }
+  #loginBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+  #loginStatus { margin-top: 14px; font-size: 0.85rem; padding: 10px 14px; border-radius: 10px; display: none; }
+
+  /* DASHBOARD */
+  #dashboardView { display: none; }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 30px; }
+  .stat-card {
+    background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--purple-light); box-shadow: var(--shadow);
+  }
+  .stat-num { font-family: var(--font-display); font-size: 1.9rem; color: var(--purple-deep); font-weight: 700; }
+  .stat-label { font-size: 0.78rem; color: var(--gray-500); margin-top: 2px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+  .toolbar h2 { font-family: var(--font-display); color: var(--purple-deep); font-size: 1.3rem; }
+  .toolbar-actions { display: flex; gap: 10px; }
+  .btn-refresh {
+    background: white; border: 1px solid var(--purple-light); color: var(--purple-deep);
+    padding: 8px 16px; border-radius: 100px; font-size: 0.85rem; cursor: pointer; font-weight: 600;
+  }
+  .btn-refresh:hover { background: var(--purple-light); }
+
+  .table-wrap { background: white; border-radius: 16px; border: 1px solid var(--purple-light); box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead th {
+    text-align: left; background: var(--purple-pale); color: var(--purple-deep); font-weight: 600;
+    padding: 12px 14px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--purple-light); white-space: nowrap;
+  }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--purple-pale); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--purple-pale); }
+  .cell-name { font-weight: 600; color: var(--purple-deep); }
+  .cell-notes { max-width: 220px; color: var(--gray-500); font-size: 0.82rem; }
+  .status-badge {
+    display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 0.75rem; font-weight: 600;
+  }
+  .status-pending { background: var(--amber-bg); color: var(--amber); }
+  .status-confirmed { background: var(--green-bg); color: var(--green); }
+  .status-completed { background: var(--purple-light); color: var(--purple-deep); }
+  .status-cancelled { background: var(--red-bg); color: var(--red); }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .row-actions button {
+    border: none; background: var(--purple-light); color: var(--purple-deep); font-size: 0.72rem;
+    padding: 5px 10px; border-radius: 8px; cursor: pointer; font-weight: 600;
+  }
+  .row-actions button.danger { background: var(--red-bg); color: var(--red); }
+  .row-actions button:hover { filter: brightness(0.95); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
+  .empty-state svg { width: 48px; height: 48px; stroke: var(--purple-soft); margin-bottom: 14px; }
+
+  #dashStatus {
+    margin-bottom: 16px; font-size: 0.85rem; padding: 10px 14px; border-radius: 10px; display: none;
+  }
+  .status-error { background: var(--red-bg); color: var(--red); border: 1px solid #F5C2C0; }
+  .status-info { background: var(--purple-light); color: var(--purple-deep); }
+
+  @media (max-width: 700px) {
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 780px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <h1>Dev Health Centre</h1>
+      <p>Admin Portal — Appointments</p>
+    </div>
+  </div>
+  <button id="logoutBtn">Sign Out</button>
+</header>
+
+<main>
+
+  <!-- LOGIN VIEW -->
+  <div id="loginView">
+    <div class="login-card">
+      <h2>Admin Sign In</h2>
+      <p class="sub">Sign in with the staff account to view appointment bookings.</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="staff@devhealthcentre.com" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button id="loginBtn">Sign In</button>
+      <div id="loginStatus"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboardView">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statTotal">–</div><div class="stat-label">Total Bookings</div></div>
+      <div class="stat-card"><div class="stat-num" id="statToday">–</div><div class="stat-label">For Today</div></div>
+      <div class="stat-card"><div class="stat-num" id="statPending">–</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-num" id="statConfirmed">–</div><div class="stat-label">Confirmed</div></div>
+    </div>
+
+    <div class="toolbar">
+      <h2>Appointment Requests</h2>
+      <div class="toolbar-actions">
+        <button class="btn-refresh" id="refreshBtn">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="dashStatus"></div>
+
+    <div class="table-wrap">
+      <table id="apptTable">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Preferred Date</th>
+            <th>Time</th>
+            <th>Department</th>
+            <th>Notes</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="apptTableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <p>No appointment requests yet.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  /* ============================================================
+     SUPABASE SETUP — use the SAME project URL and anon key
+     as the main website (index / dev-health-centre.html).
+     Found in Supabase Dashboard → Project Settings → API.
+  ============================================================ */
+  const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_PUBLIC_KEY';
+
+  const supabaseClient = (SUPABASE_URL.startsWith('http'))
+    ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  const loginView = document.getElementById('loginView');
+  const dashboardView = document.getElementById('dashboardView');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginStatus = document.getElementById('loginStatus');
+  const dashStatus = document.getElementById('dashStatus');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const tableBody = document.getElementById('apptTableBody');
+  const emptyState = document.getElementById('emptyState');
+
+  function showLoginStatus(msg, type) {
+    loginStatus.textContent = msg;
+    loginStatus.style.display = 'block';
+    loginStatus.style.background = type === 'error' ? '#FDEDED' : '#EAF9EF';
+    loginStatus.style.color = type === 'error' ? '#B42318' : '#1E7A3D';
+  }
+
+  function showDashStatus(msg, type) {
+    dashStatus.textContent = msg;
+    dashStatus.style.display = 'block';
+    dashStatus.className = type === 'error' ? 'status-error' : 'status-info';
+  }
+  function hideDashStatus() { dashStatus.style.display = 'none'; }
+
+  function switchToDashboard() {
+    loginView.style.display = 'none';
+    dashboardView.style.display = 'block';
+    logoutBtn.style.display = 'inline-block';
+    loadAppointments();
+  }
+
+  function switchToLogin() {
+    loginView.style.display = 'flex';
+    dashboardView.style.display = 'none';
+    logoutBtn.style.display = 'none';
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) {
+      showLoginStatus('Please enter both email and password.', 'error');
+      return;
+    }
+    if (!supabaseClient) {
+      showLoginStatus('Admin portal is not yet connected to the database. Contact your developer.', 'error');
+      return;
+    }
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Signing in...';
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+    if (error) {
+      showLoginStatus('Sign in failed: ' + error.message, 'error');
+    } else {
+      switchToDashboard();
+    }
+  }
+
+  async function handleLogout() {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+    switchToLogin();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function statusBadge(status) {
+    const s = (status || 'pending').toLowerCase();
+    const labelMap = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' };
+    return `<span class="status-badge status-${s}">${labelMap[s] || 'Pending'}</span>`;
+  }
+
+  async function updateStatus(id, newStatus, btn) {
+    if (!supabaseClient) return;
+    btn.disabled = true;
+    const { error } = await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id);
+    if (error) {
+      showDashStatus('Could not update status: ' + error.message, 'error');
+    } else {
+      loadAppointments();
+    }
+  }
+
+  async function deleteAppointment(id, btn) {
+    if (!supabaseClient) return;
+    if (!confirm('Delete this appointment request? This cannot be undone.')) return;
+    btn.disabled = true;
+    const { error } = await supabaseClient.from('appointments').delete().eq('id', id);
+    if (error) {
+      showDashStatus('Could not delete: ' + error.message, 'error');
+    } else {
+      loadAppointments();
+    }
+  }
+
+  function renderRows(rows) {
+    tableBody.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      emptyState.style.display = 'block';
+      document.getElementById('apptTable').style.display = 'none';
+      return;
+    }
+    emptyState.style.display = 'none';
+    document.getElementById('apptTable').style.display = 'table';
+
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="cell-name">${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td>
+        <td>${escapeHtml(r.phone)}</td>
+        <td>${escapeHtml(r.email) || '—'}</td>
+        <td>${escapeHtml(r.preferred_date) || '—'}</td>
+        <td>${escapeHtml(r.preferred_time) || '—'}</td>
+        <td>${escapeHtml(r.department) || '—'}</td>
+        <td class="cell-notes">${escapeHtml(r.notes) || '—'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>
+          <div class="row-actions">
+            <button data-action="confirm">Confirm</button>
+            <button data-action="complete">Complete</button>
+            <button data-action="delete" class="danger">Delete</button>
+          </div>
+        </td>
+      `;
+      tr.querySelector('[data-action="confirm"]').addEventListener('click', (e) => updateStatus(r.id, 'confirmed', e.target));
+      tr.querySelector('[data-action="complete"]').addEventListener('click', (e) => updateStatus(r.id, 'completed', e.target));
+      tr.querySelector('[data-action="delete"]').addEventListener('click', (e) => deleteAppointment(r.id, e.target));
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateStats(rows) {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('statTotal').textContent = rows.length;
+    document.getElementById('statToday').textContent = rows.filter(r => r.preferred_date === today).length;
+    document.getElementById('statPending').textContent = rows.filter(r => (r.status || 'pending') === 'pending').length;
+    document.getElementById('statConfirmed').textContent = rows.filter(r => r.status === 'confirmed').length;
+  }
+
+  async function loadAppointments() {
+    if (!supabaseClient) {
+      showDashStatus('Admin portal is not yet connected to the database. Contact your developer.', 'error');
+      return;
+    }
+    hideDashStatus();
+    const { data, error } = await supabaseClient
+      .from('appointments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      showDashStatus('Could not load appointments: ' + error.message, 'error');
+      return;
+    }
+    renderRows(data);
+    updateStats(data);
+  }
+
+  loginBtn.addEventListener('click', handleLogin);
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+  logoutBtn.addEventListener('click', handleLogout);
+  refreshBtn.addEventListener('click', loadAppointments);
+
+  // On load, check for an existing session
+  (async function init() {
+    if (!supabaseClient) { switchToLogin(); return; }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      switchToDashboard();
+    } else {
+      switchToLogin();
+    }
+    // Keep in sync with auth state changes
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') switchToDashboard();
+      if (event === 'SIGNED_OUT') switchToLogin();
+    });
+  })();
+</script>
+</body>
+</html>
